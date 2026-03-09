@@ -74,6 +74,24 @@
     return { data: authSession.user };
   }
 
+  async function exchangeCodeForSession(code) {
+    const response = await authRequest("/token?grant_type=pkce", {
+      method: "POST",
+      body: JSON.stringify({ auth_code: code }),
+    });
+
+    if (response.error) return response;
+
+    authSession = {
+      access_token: response.data.access_token,
+      refresh_token: response.data.refresh_token,
+      user: response.data.user ?? null,
+    };
+    saveSession(authSession);
+
+    return { data: authSession };
+  }
+
   async function refreshSession() {
     if (!authSession?.refresh_token) return false;
 
@@ -159,6 +177,46 @@
     }
 
     clearSession();
+  }
+
+  async function updateUser(attributes) {
+    if (!authSession?.access_token) {
+      const refreshed = await refreshSession();
+      if (!refreshed) return { error: "Session invalide ou expiree." };
+    }
+
+    let response = await authRequest("/user", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${authSession.access_token}`,
+      },
+      body: JSON.stringify(attributes),
+    });
+
+    if (response.error && authSession?.refresh_token) {
+      const refreshed = await refreshSession();
+      if (refreshed) {
+        response = await authRequest("/user", {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${authSession.access_token}`,
+          },
+          body: JSON.stringify(attributes),
+        });
+      }
+    }
+
+    if (response.error) return response;
+
+    if (response.data) {
+      authSession = {
+        ...authSession,
+        user: response.data,
+      };
+      saveSession(authSession);
+    }
+
+    return { data: response.data ?? null };
   }
 
   async function restRequest(path, options = {}, withAuth = false, retried = false) {
@@ -261,8 +319,10 @@
     getConfigError,
     getSession,
     loginWithPassword,
+    exchangeCodeForSession,
     getAuthenticatedUser,
     signOut,
+    updateUser,
     restRequest,
   };
 })();

@@ -6,6 +6,7 @@ ALCYON CAPITAL est une TODO liste statique (HTML/CSS/JS) transformee en PWA, syn
 
 - `index.html` : routeur (redirige selon la session vers `login.html` ou `app.html`).
 - `login.html` : page de connexion (email + mot de passe).
+- `reset.html` : page dediee au changement de mot de passe apres email de recovery.
 - `app.html` : interface de liste (ajout, recherche, checkbox, suppression, deconnexion).
 - `style.css` : style responsive.
 - `assets/bg.jpg` : image de fond.
@@ -15,6 +16,7 @@ ALCYON CAPITAL est une TODO liste statique (HTML/CSS/JS) transformee en PWA, syn
 - `supabase.js` : init/config Supabase + session/auth + helpers REST communs.
 - `router.js` : logique de redirection de `index.html`.
 - `auth.js` : logique de connexion de `login.html`.
+- `reset.js` : logique de changement de mot de passe de `reset.html`.
 - `list.js` : CRUD items + UI de `app.html`.
 - `manifest.webmanifest` : configuration PWA.
 - `sw.js` : service worker avec pre-cache et cache-first.
@@ -81,6 +83,7 @@ Flux attendu:
 - refresh sur `app.html` conserve l'acces tant que la session est valide.
 - acces direct a `app.html` sans session -> redirection vers `login.html`.
 - bouton `Se deconnecter` -> `login.html`.
+- lien de recovery Supabase -> `reset.html` -> mise a jour du mot de passe -> redirection `login.html`.
 
 Checks CRUD:
 
@@ -100,6 +103,15 @@ git push
 Ensuite attendre le redeploiement Pages, puis ouvrir:
 
 - `https://<USER>.github.io/<REPO>/`
+
+## Reset mot de passe (Supabase)
+
+1. Depuis Supabase Auth (Dashboard ou API), envoyer un email de recovery (`send recovery email`).
+2. Verifier que l'URL de redirection de recovery pointe vers:
+   - `https://<USER>.github.io/<REPO>/reset.html`
+3. Depuis l'email, ouvrir le lien de recovery.
+4. Sur `reset.html`, saisir le nouveau mot de passe (12 caracteres min), confirmer, puis valider.
+5. Apres succes, retour automatique vers `login.html` en 2 secondes.
 
 ## Test Galaxy S7
 

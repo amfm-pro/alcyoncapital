@@ -1,14 +1,16 @@
-﻿const CACHE_VERSION = "v9";
+﻿const CACHE_VERSION = "v10";
 const CACHE_NAME = `mini-liste-${CACHE_VERSION}`;
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
   "./login.html",
   "./app.html",
+  "./reset.html",
   "./style.css",
   "./supabase.js",
   "./router.js",
   "./auth.js",
+  "./reset.js",
   "./list.js",
   "./manifest.webmanifest",
   "./config.js",
@@ -54,7 +56,3 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
-
-
-
-
