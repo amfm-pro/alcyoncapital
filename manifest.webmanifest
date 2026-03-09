@@ -1,7 +1,7 @@
 {
-  "name": "Mini Liste",
-  "short_name": "MiniListe",
-  "description": "Liste simple: ajouter, modifier, supprimer et rechercher des elements.",
+  "name": "ALCYON CAPITAL",
+  "short_name": "ALCYON",
+  "description": "ALCYON CAPITAL: liste simple synchronisee via Supabase.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

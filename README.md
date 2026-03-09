@@ -1,6 +1,6 @@
-﻿# Mini application web statique + Supabase
+﻿# ALCYON CAPITAL - application web statique + Supabase
 
-Cette application est une TODO liste statique (HTML/CSS/JS) transformee en PWA, synchronisee via Supabase entre plusieurs appareils (PC et Galaxy S7).
+ALCYON CAPITAL est une TODO liste statique (HTML/CSS/JS) transformee en PWA, synchronisee via Supabase entre plusieurs appareils (PC et Galaxy S7).
 
 ## Fichiers principaux
 
@@ -118,3 +118,4 @@ Ensuite attendre le redeploiement Pages, puis ouvrir:
 2. Relancer une fois l'URL pour laisser le nouveau service worker (`CACHE_VERSION`) s'activer.
 3. Si l'icone ou le fond ne changent pas: Chrome Android > Parametres > Parametres des sites > Stockage > ton domaine > Effacer et reinitialiser.
 4. Si l'icone installable reste ancienne: desinstaller la PWA puis la reinstaller.
+

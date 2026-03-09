@@ -4,41 +4,44 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#1f6feb" />
-    <title>Mini Liste</title>
+    <title>ALCYON CAPITAL</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" href="assets/icon-192.png" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="container">
-      <header class="app-header">
-        <div>
-          <h1>Mini Liste</h1>
-          <p>Synchronisation Supabase entre vos appareils.</p>
-        </div>
-        <div class="user-panel">
-          <span id="user-email" class="user-email"></span>
-          <button id="logout-btn" type="button" class="secondary-btn">Se deconnecter</button>
-        </div>
+    <div class="page-shell">
+      <header class="hero-brand">
+        <img class="hero-icon" src="assets/icon-192.png" alt="Logo Alcyon Capital" />
+        <h1 class="hero-title">ALCYON CAPITAL</h1>
       </header>
 
-      <p id="status-message" class="status-message" aria-live="polite"></p>
+      <main class="container">
+        <div class="app-toolbar">
+          <div class="user-panel">
+            <span id="user-email" class="user-email"></span>
+            <button id="logout-btn" type="button" class="secondary-btn">Se deconnecter</button>
+          </div>
+        </div>
 
-      <section class="controls">
-        <form id="add-form" autocomplete="off">
-          <label for="item-input" class="sr-only">Nouvel element</label>
-          <input id="item-input" type="text" placeholder="Nouvel element..." required />
-          <button type="submit">Ajouter</button>
-        </form>
+        <p id="status-message" class="status-message" aria-live="polite"></p>
 
-        <label for="search-input" class="sr-only">Rechercher</label>
-        <input id="search-input" type="text" placeholder="Rechercher..." />
-      </section>
+        <section class="controls">
+          <form id="add-form" autocomplete="off">
+            <label for="item-input" class="sr-only">Nouvel element</label>
+            <input id="item-input" type="text" placeholder="Nouvel element..." required />
+            <button type="submit">Ajouter</button>
+          </form>
 
-      <section>
-        <ul id="item-list" class="item-list" aria-live="polite"></ul>
-      </section>
-    </main>
+          <label for="search-input" class="sr-only">Rechercher</label>
+          <input id="search-input" type="text" placeholder="Rechercher..." />
+        </section>
+
+        <section>
+          <ul id="item-list" class="item-list" aria-live="polite"></ul>
+        </section>
+      </main>
+    </div>
 
     <script src="config.js"></script>
     <script src="supabase.js"></script>

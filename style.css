@@ -27,15 +27,22 @@ body {
   position: relative;
 }
 
+.page-shell {
+  max-width: 1280px;
+  margin: 68px auto 30px;
+  padding: 0 22px;
+}
+
 .container {
-  max-width: 760px;
-  margin: 40px auto;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
-  backdrop-filter: blur(2px);
+  width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(219, 225, 230, 0.55);
+  border-radius: 4px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(1px);
   position: relative;
   z-index: 1;
 }
@@ -53,21 +60,33 @@ body {
   color: var(--muted);
 }
 
-.app-header {
+.hero-brand {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  gap: 14px;
+  max-width: 1060px;
+  margin: 0 auto 22px;
 }
 
-header h1 {
-  margin: 0 0 8px;
-  font-size: 1.8rem;
+.hero-icon {
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
 }
 
-header p {
+.hero-title {
   margin: 0;
-  color: var(--muted);
+  font-size: 3.45rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.005em;
+  color: #1d5f89;
+}
+
+.app-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
 }
 
 .user-panel {
@@ -113,6 +132,30 @@ header p {
 .auth-card label {
   font-size: 0.9rem;
   color: var(--muted);
+}
+
+.login-page .container {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 26px;
+  padding-bottom: 26px;
+}
+
+.login-page .status-message {
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.login-page .auth-grid {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 440px;
+}
+
+.login-page .auth-card {
+  width: 100%;
 }
 
 .controls {
@@ -251,13 +294,33 @@ button:hover {
 }
 
 @media (max-width: 700px) {
+  .page-shell {
+    margin: 32px auto 20px;
+    padding: 0 12px;
+  }
+
   .container {
-    margin: 24px 12px;
     padding: 16px;
   }
 
-  .app-header {
-    flex-direction: column;
+  .hero-brand {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .hero-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .hero-title {
+    font-size: 2.25rem;
+  }
+
+  .login-page .container {
+    min-height: 320px;
+    padding-top: 18px;
+    padding-bottom: 18px;
   }
 
   .item {
