@@ -1,4 +1,4 @@
-﻿const CACHE_VERSION = "v10";
+﻿const CACHE_VERSION = "v11";
 const CACHE_NAME = `mini-liste-${CACHE_VERSION}`;
 const ASSETS_TO_CACHE = [
   "./",
@@ -56,3 +56,4 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+

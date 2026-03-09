@@ -6,6 +6,7 @@
   const supabaseAnonKey = appConfig.SUPABASE_ANON_KEY;
 
   let authSession = loadSession();
+  const authStateListeners = new Set();
 
   function isConfigReady() {
     return Boolean(supabaseUrl && supabaseAnonKey);
@@ -33,6 +34,7 @@
       hashParams.get("access_token") || searchParams.get("access_token");
     const refreshToken =
       hashParams.get("refresh_token") || searchParams.get("refresh_token");
+    const redirectType = hashParams.get("type") || searchParams.get("type");
 
     if (!accessToken) return false;
 
@@ -42,6 +44,9 @@
       user: authSession?.user ?? null,
     };
     saveSession(authSession);
+    notifyAuthStateChange(
+      redirectType === "recovery" ? "PASSWORD_RECOVERY" : "SIGNED_IN"
+    );
 
     if (window.history?.replaceState) {
       window.history.replaceState(
@@ -71,6 +76,7 @@
     };
 
     saveSession(authSession);
+    notifyAuthStateChange("SIGNED_IN");
     return { data: authSession.user };
   }
 
@@ -88,6 +94,7 @@
       user: response.data.user ?? null,
     };
     saveSession(authSession);
+    notifyAuthStateChange("PASSWORD_RECOVERY");
 
     return { data: authSession };
   }
@@ -177,6 +184,30 @@
     }
 
     clearSession();
+    notifyAuthStateChange("SIGNED_OUT");
+  }
+
+  function onAuthStateChange(callback) {
+    if (typeof callback !== "function") {
+      return {
+        data: {
+          subscription: {
+            unsubscribe: () => {},
+          },
+        },
+      };
+    }
+
+    authStateListeners.add(callback);
+    return {
+      data: {
+        subscription: {
+          unsubscribe: () => {
+            authStateListeners.delete(callback);
+          },
+        },
+      },
+    };
   }
 
   async function updateUser(attributes) {
@@ -300,6 +331,16 @@
     localStorage.removeItem(SESSION_KEY);
   }
 
+  function notifyAuthStateChange(event) {
+    authStateListeners.forEach((listener) => {
+      try {
+        listener(event, authSession);
+      } catch {
+        // Ignore listener errors to keep auth flow stable.
+      }
+    });
+  }
+
   async function readError(response) {
     try {
       const data = await response.json();
@@ -320,6 +361,7 @@
     getSession,
     loginWithPassword,
     exchangeCodeForSession,
+    onAuthStateChange,
     getAuthenticatedUser,
     signOut,
     updateUser,
