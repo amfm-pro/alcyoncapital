@@ -96,6 +96,18 @@ body {
   min-width: 0;
 }
 
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #d5deea;
+  background: #f2f6fc;
+  color: #44546a;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
 .user-email {
   font-size: 0.95rem;
   color: var(--muted);
@@ -279,6 +291,12 @@ button:hover {
 
 .delete-btn:hover {
   background: #faeceb;
+}
+
+input:disabled,
+button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
 }
 
 .empty {

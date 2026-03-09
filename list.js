@@ -1,4 +1,5 @@
 ﻿const statusMessage = document.getElementById("status-message");
+const roleBadge = document.getElementById("role-badge");
 const userEmail = document.getElementById("user-email");
 const logoutBtn = document.getElementById("logout-btn");
 
@@ -6,10 +7,12 @@ const addForm = document.getElementById("add-form");
 const itemInput = document.getElementById("item-input");
 const searchInput = document.getElementById("search-input");
 const itemList = document.getElementById("item-list");
+const addButton = addForm.querySelector("button");
 
 let currentUser = null;
 let items = [];
 let query = "";
+let isAdmin = false;
 
 initAppPage();
 
@@ -27,6 +30,9 @@ async function initAppPage() {
     window.location.replace("login.html");
     return;
   }
+
+  isAdmin = await resolveIsAdmin(api);
+  applyRoleUIState();
 
   userEmail.textContent = currentUser.email || "Connecte";
   showStatus("Connecte.", false);
@@ -49,10 +55,39 @@ function bindEvents() {
 }
 
 function disableApp() {
-  addForm.querySelector("button").disabled = true;
+  addButton.disabled = true;
   itemInput.disabled = true;
   searchInput.disabled = true;
   logoutBtn.disabled = true;
+}
+
+async function resolveIsAdmin(api) {
+  // Equivalent to supabase.auth.getSession() in this app wrapper.
+  const session = api.getSession();
+  const sessionUserId = session?.user?.id || currentUser?.id;
+  if (!sessionUserId) return false;
+
+  const response = await api.restRequest(
+    `/profiles?select=role&user_id=eq.${encodeURIComponent(sessionUserId)}&limit=1`,
+    { method: "GET" },
+    true
+  );
+
+  if (response.error) return false;
+
+  const profile = Array.isArray(response.data) ? response.data[0] : null;
+  return profile?.role === "admin";
+}
+
+function applyRoleUIState() {
+  const readOnly = !isAdmin;
+  itemInput.disabled = readOnly;
+  addButton.disabled = readOnly;
+  roleBadge.hidden = !readOnly;
+
+  document.querySelectorAll(".admin-only").forEach((element) => {
+    element.hidden = readOnly;
+  });
 }
 
 async function onLogout() {
@@ -62,7 +97,7 @@ async function onLogout() {
 
 async function loadItems() {
   const response = await window.SupabaseApi.restRequest(
-    "/items?select=id,text,done,created_at&order=created_at.desc",
+    "/items?select=id,text,done,created_at&order=created_at.asc",
     { method: "GET" },
     true
   );
@@ -80,6 +115,7 @@ async function loadItems() {
 
 async function onAddItem(event) {
   event.preventDefault();
+  if (!isAdmin) return;
 
   const text = itemInput.value.trim();
   if (!text || !currentUser) return;
@@ -101,24 +137,20 @@ async function onAddItem(event) {
   );
 
   if (response.error) {
-    showStatus(`Ajout impossible: ${response.error}`, true);
+    showAdminError(`Ajout impossible: ${response.error}`);
     return;
   }
 
-  const inserted = Array.isArray(response.data) ? response.data[0] : response.data;
-  if (inserted) {
-    items.unshift(inserted);
-  }
-
+  await loadItems();
   itemInput.value = "";
   itemInput.focus();
-  renderItems();
 }
 
 async function onItemListClick(event) {
+  if (!isAdmin) return;
+
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
-
   if (!target.matches(".delete-btn")) return;
 
   const id = target.dataset.id;
@@ -131,15 +163,16 @@ async function onItemListClick(event) {
   );
 
   if (response.error) {
-    showStatus(`Suppression impossible: ${response.error}`, true);
+    showAdminError(`Suppression impossible: ${response.error}`);
     return;
   }
 
-  items = items.filter((item) => item.id !== id);
-  renderItems();
+  await loadItems();
 }
 
 async function onItemListChange(event) {
+  if (!isAdmin) return;
+
   const target = event.target;
   if (!(target instanceof HTMLInputElement)) return;
   if (!target.matches(".item-checkbox")) return;
@@ -151,6 +184,8 @@ async function onItemListChange(event) {
   if (!item) return;
 
   const nextDone = target.checked;
+  target.checked = item.done;
+
   const response = await window.SupabaseApi.restRequest(
     `/items?id=eq.${encodeURIComponent(id)}`,
     {
@@ -161,15 +196,11 @@ async function onItemListChange(event) {
   );
 
   if (response.error) {
-    target.checked = item.done;
-    showStatus(`Mise a jour impossible: ${response.error}`, true);
+    showAdminError(`Mise a jour impossible: ${response.error}`);
     return;
   }
 
-  items = items.map((entry) =>
-    entry.id === id ? { ...entry, done: nextDone } : entry
-  );
-  renderItems();
+  await loadItems();
 }
 
 function getFilteredItems() {
@@ -197,19 +228,29 @@ function renderItems() {
             type="checkbox"
             data-id="${item.id}"
             ${item.done ? "checked" : ""}
+            ${!isAdmin ? "disabled" : ""}
             aria-label="Marquer ${escapeHtml(item.text)}"
           />
           <span class="item-text">${escapeHtml(item.text)}</span>
         </label>
         <div class="item-actions">
-          <button class="delete-btn" data-id="${item.id}" aria-label="Supprimer ${escapeHtml(
-        item.text
-      )}">X</button>
+          ${
+            isAdmin
+              ? `<button class="delete-btn" data-id="${item.id}" aria-label="Supprimer ${escapeHtml(
+                  item.text
+                )}">X</button>`
+              : ""
+          }
         </div>
       </li>
     `
     )
     .join("");
+}
+
+function showAdminError(message) {
+  if (!isAdmin) return;
+  showStatus(message, true);
 }
 
 function showStatus(message, isError) {
