@@ -13,6 +13,10 @@ let currentUser = null;
 let items = [];
 let query = "";
 let isAdmin = false;
+let draggedItemId = null;
+let editingItemId = null;
+
+const MAX_ITEM_TEXT_LENGTH = 120;
 
 initAppPage();
 
@@ -51,7 +55,13 @@ function bindEvents() {
   });
 
   itemList.addEventListener("click", onItemListClick);
+  itemList.addEventListener("dblclick", onItemListDblClick);
+  itemList.addEventListener("keydown", onItemListKeyDown);
   itemList.addEventListener("change", onItemListChange);
+  itemList.addEventListener("dragstart", onItemDragStart);
+  itemList.addEventListener("dragover", onItemDragOver);
+  itemList.addEventListener("drop", onItemDrop);
+  itemList.addEventListener("dragend", onItemDragEnd);
 }
 
 function disableApp() {
@@ -97,7 +107,7 @@ async function onLogout() {
 
 async function loadItems() {
   const response = await window.SupabaseApi.restRequest(
-    "/items?select=id,text,done,created_at&order=created_at.asc",
+    "/items?select=id,text,done,position,created_at&order=position.asc.nullslast&order=created_at.asc",
     { method: "GET" },
     true
   );
@@ -120,6 +130,7 @@ async function onAddItem(event) {
   const text = itemInput.value.trim();
   if (!text || !currentUser) return;
 
+  const nextPosition = computeNextTopPosition();
   const response = await window.SupabaseApi.restRequest(
     "/items",
     {
@@ -130,6 +141,7 @@ async function onAddItem(event) {
       body: JSON.stringify({
         text,
         done: false,
+        position: nextPosition,
         user_id: currentUser.id,
       }),
     },
@@ -151,6 +163,25 @@ async function onItemListClick(event) {
 
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
+  if (target.matches(".edit-btn")) {
+    const id = target.dataset.id;
+    if (!id) return;
+    startEditItem(id);
+    return;
+  }
+
+  if (target.matches(".save-btn")) {
+    const id = target.dataset.id;
+    if (!id) return;
+    await saveEditedItem(id);
+    return;
+  }
+
+  if (target.matches(".cancel-btn")) {
+    cancelEditItem();
+    return;
+  }
+
   if (!target.matches(".delete-btn")) return;
 
   const id = target.dataset.id;
@@ -168,6 +199,42 @@ async function onItemListClick(event) {
   }
 
   await loadItems();
+}
+
+function onItemListDblClick(event) {
+  if (!isAdmin) return;
+
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  if (!target.matches(".item-text")) return;
+
+  const itemElement = target.closest(".item[data-id]");
+  const id = itemElement?.getAttribute("data-id");
+  if (!id) return;
+
+  startEditItem(id);
+}
+
+async function onItemListKeyDown(event) {
+  if (!isAdmin) return;
+
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  if (!target.matches(".edit-input")) return;
+
+  const id = target.dataset.id;
+  if (!id) return;
+
+  if (event.key === "Enter") {
+    event.preventDefault();
+    await saveEditedItem(id);
+    return;
+  }
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    cancelEditItem();
+  }
 }
 
 async function onItemListChange(event) {
@@ -203,6 +270,87 @@ async function onItemListChange(event) {
   await loadItems();
 }
 
+function onItemDragStart(event) {
+  if (!isAdmin) return;
+  if (editingItemId) return;
+  if (query) return;
+
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+
+  const itemElement = target.closest(".item[data-id]");
+  if (!(itemElement instanceof HTMLLIElement)) return;
+
+  draggedItemId = itemElement.dataset.id || null;
+  if (!draggedItemId) return;
+
+  itemElement.classList.add("item-dragging");
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", draggedItemId);
+  }
+}
+
+function onItemDragOver(event) {
+  if (!isAdmin) return;
+  if (editingItemId) return;
+  if (query) return;
+
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  if (!draggedItemId) return;
+
+  const overElement = target.closest(".item[data-id]");
+  if (!(overElement instanceof HTMLLIElement)) return;
+  if (overElement.dataset.id === draggedItemId) return;
+
+  const draggedElement = itemList.querySelector(`.item[data-id="${draggedItemId}"]`);
+  if (!(draggedElement instanceof HTMLLIElement)) return;
+
+  event.preventDefault();
+
+  const bounds = overElement.getBoundingClientRect();
+  const shouldInsertAfter = event.clientY > bounds.top + bounds.height / 2;
+  const nextSibling = shouldInsertAfter ? overElement.nextElementSibling : overElement;
+
+  if (nextSibling !== draggedElement) {
+    itemList.insertBefore(draggedElement, nextSibling);
+  }
+}
+
+async function onItemDrop(event) {
+  if (!isAdmin) return;
+  if (editingItemId) return;
+  if (query) return;
+
+  event.preventDefault();
+  if (!draggedItemId) return;
+
+  const nextOrderIds = Array.from(itemList.querySelectorAll(".item[data-id]"))
+    .map((node) => node.dataset.id)
+    .filter((id) => Boolean(id));
+
+  if (nextOrderIds.length <= 1) {
+    clearDragState();
+    return;
+  }
+
+  const previousOrder = items.map((item) => item.id);
+  const changed =
+    nextOrderIds.length === previousOrder.length &&
+    nextOrderIds.some((id, index) => id !== previousOrder[index]);
+
+  clearDragState();
+
+  if (!changed) return;
+  await persistReorder(nextOrderIds);
+}
+
+function onItemDragEnd() {
+  if (!isAdmin) return;
+  clearDragState();
+}
+
 function getFilteredItems() {
   if (!query) return items;
   return items.filter((item) => item.text.toLowerCase().includes(query));
@@ -219,9 +367,27 @@ function renderItems() {
 
   itemList.innerHTML = filtered
     .map(
-      (item) => `
-      <li class="item ${item.done ? "item-done" : ""}">
-        <label class="item-main" for="item-${item.id}">
+      (item) => {
+        const canDrag = isAdmin && !query && !editingItemId;
+        const isEditing = isAdmin && editingItemId === item.id;
+        return `
+      <li class="item ${item.done ? "item-done" : ""} ${
+        canDrag ? "item-draggable" : ""
+      }" data-id="${item.id}" ${canDrag ? 'draggable="true"' : ""}>
+        ${canDrag ? '<span class="drag-handle" aria-hidden="true">☰</span>' : ""}
+        ${
+          isEditing
+            ? `<div class="item-main">
+                <input
+                  class="edit-input"
+                  type="text"
+                  data-id="${item.id}"
+                  value="${escapeHtml(item.text)}"
+                  maxlength="${MAX_ITEM_TEXT_LENGTH}"
+                  aria-label="Modifier ${escapeHtml(item.text)}"
+                />
+              </div>`
+            : `<label class="item-main" for="item-${item.id}">
           <input
             id="item-${item.id}"
             class="item-checkbox"
@@ -232,25 +398,157 @@ function renderItems() {
             aria-label="Marquer ${escapeHtml(item.text)}"
           />
           <span class="item-text">${escapeHtml(item.text)}</span>
-        </label>
+        </label>`
+        }
         <div class="item-actions">
           ${
-            isAdmin
-              ? `<button class="delete-btn" data-id="${item.id}" aria-label="Supprimer ${escapeHtml(
+            isEditing
+              ? `<button class="save-btn" data-id="${item.id}" aria-label="Enregistrer ${escapeHtml(
+                  item.text
+                )}">✓</button>
+                 <button class="cancel-btn" data-id="${item.id}" aria-label="Annuler edition">✕</button>`
+              : isAdmin
+              ? `<button class="edit-btn" data-id="${item.id}" aria-label="Modifier ${escapeHtml(
+                  item.text
+                )}">✎</button>
+                 <button class="delete-btn" data-id="${item.id}" aria-label="Supprimer ${escapeHtml(
                   item.text
                 )}">X</button>`
               : ""
           }
         </div>
       </li>
-    `
+    `;
+      }
     )
     .join("");
+
+  if (isAdmin && editingItemId) {
+    const editInput = itemList.querySelector(`.edit-input[data-id="${editingItemId}"]`);
+    if (editInput instanceof HTMLInputElement) {
+      editInput.focus();
+      editInput.setSelectionRange(editInput.value.length, editInput.value.length);
+    }
+  }
 }
 
 function showAdminError(message) {
   if (!isAdmin) return;
   showStatus(message, true);
+}
+
+function clearDragState() {
+  draggedItemId = null;
+  itemList.querySelectorAll(".item-dragging").forEach((element) => {
+    element.classList.remove("item-dragging");
+  });
+}
+
+async function persistReorder(visibleOrderIds) {
+  if (!isAdmin) return;
+
+  const visibleSet = new Set(visibleOrderIds);
+  const fullOrderIds = [
+    ...visibleOrderIds,
+    ...items.map((item) => item.id).filter((id) => !visibleSet.has(id)),
+  ];
+
+  const updates = fullOrderIds.map((id, index) => ({
+    id,
+    position: (index + 1) * 10,
+  }));
+
+  for (const update of updates) {
+    const response = await window.SupabaseApi.restRequest(
+      `/items?id=eq.${encodeURIComponent(update.id)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ position: update.position }),
+      },
+      true
+    );
+
+    if (response.error) {
+      showAdminError(`Reorganisation impossible: ${response.error}`);
+      await loadItems();
+      return;
+    }
+  }
+
+  await loadItems();
+}
+
+function startEditItem(itemId) {
+  if (!isAdmin) return;
+  if (!itemId) return;
+  editingItemId = itemId;
+  clearDragState();
+  renderItems();
+}
+
+function cancelEditItem() {
+  if (!isAdmin) return;
+  editingItemId = null;
+  renderItems();
+}
+
+async function saveEditedItem(itemId) {
+  if (!isAdmin) return;
+  if (!itemId) return;
+
+  const item = items.find((entry) => entry.id === itemId);
+  if (!item) return;
+
+  const input = itemList.querySelector(`.edit-input[data-id="${itemId}"]`);
+  if (!(input instanceof HTMLInputElement)) return;
+
+  const newText = input.value.trim();
+  if (!newText) {
+    showAdminError("Le texte ne peut pas etre vide.");
+    input.focus();
+    return;
+  }
+
+  if (newText.length > MAX_ITEM_TEXT_LENGTH) {
+    showAdminError(`Texte trop long (${MAX_ITEM_TEXT_LENGTH} caracteres max).`);
+    input.focus();
+    return;
+  }
+
+  if (newText === item.text) {
+    editingItemId = null;
+    renderItems();
+    return;
+  }
+
+  const response = await window.SupabaseApi.restRequest(
+    `/items?id=eq.${encodeURIComponent(itemId)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ text: newText }),
+    },
+    true
+  );
+
+  if (response.error) {
+    showAdminError(`Edition impossible: ${response.error}`);
+    return;
+  }
+
+  editingItemId = null;
+  await loadItems();
+}
+
+function computeNextTopPosition() {
+  const numericPositions = items
+    .map((item) => Number(item.position))
+    .filter((value) => Number.isFinite(value));
+
+  if (numericPositions.length === 0) {
+    return Date.now();
+  }
+
+  return Math.min(...numericPositions) - 1;
 }
 
 function showStatus(message, isError) {

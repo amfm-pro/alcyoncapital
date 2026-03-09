@@ -244,6 +244,25 @@ button:hover {
   background: #fff;
 }
 
+.item-draggable {
+  cursor: grab;
+}
+
+.item-dragging {
+  opacity: 0.52;
+  outline: 2px dashed #6d8fbf;
+  outline-offset: 1px;
+}
+
+.drag-handle {
+  flex-shrink: 0;
+  color: #8a97a6;
+  font-size: 1rem;
+  line-height: 1;
+  margin-right: 2px;
+  user-select: none;
+}
+
 .item-main {
   display: flex;
   align-items: center;
@@ -291,6 +310,40 @@ button:hover {
 
 .delete-btn:hover {
   background: #faeceb;
+}
+
+.edit-btn,
+.save-btn,
+.cancel-btn {
+  background: #fff;
+  border-color: var(--border);
+  color: #4e5d6b;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.edit-btn:hover,
+.save-btn:hover,
+.cancel-btn:hover {
+  background: #eef2f6;
+}
+
+.save-btn {
+  color: #0f5132;
+  border-color: #b8d8c6;
+}
+
+.cancel-btn {
+  color: #7b2330;
+  border-color: #e4c1c8;
+}
+
+.edit-input {
+  width: 100%;
 }
 
 input:disabled,
