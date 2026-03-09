@@ -93,11 +93,14 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .user-email {
   font-size: 0.95rem;
   color: var(--muted);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .status-message {
@@ -169,6 +172,10 @@ body {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
+}
+
+#add-form input {
+  min-width: 0;
 }
 
 input,
@@ -321,6 +328,29 @@ button:hover {
     min-height: 320px;
     padding-top: 18px;
     padding-bottom: 18px;
+  }
+
+  .app-toolbar {
+    justify-content: stretch;
+  }
+
+  .user-panel {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  #add-form {
+    grid-template-columns: 1fr;
+  }
+
+  #add-form button {
+    width: 100%;
+  }
+
+  .controls {
+    margin-top: 14px;
   }
 
   .item {
