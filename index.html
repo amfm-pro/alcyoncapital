@@ -1,68 +1,23 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#1f6feb" />
-    <title>Mini Liste</title>
+    <title>Mini Liste - Chargement</title>
     <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="assets/icon-192.png" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="container">
-      <header class="app-header">
-        <div>
-          <h1>Mini Liste</h1>
-          <p>Synchronisation Supabase entre PC et Galaxy S7.</p>
-        </div>
-        <div id="user-panel" class="user-panel" hidden>
-          <span id="user-email" class="user-email"></span>
-          <button id="logout-btn" type="button" class="secondary-btn">Se deconnecter</button>
-        </div>
-      </header>
-
-      <p id="status-message" class="status-message" aria-live="polite"></p>
-
-      <section id="auth-section" class="auth-grid">
-        <form id="login-form" class="auth-card" autocomplete="on">
-          <h2>Connexion</h2>
-          <label for="login-email">Email</label>
-          <input id="login-email" type="email" autocomplete="email" required />
-          <label for="login-password">Mot de passe</label>
-          <input id="login-password" type="password" autocomplete="current-password" required />
-          <button type="submit">Se connecter</button>
-        </form>
-
-        <form id="signup-form" class="auth-card" autocomplete="on">
-          <h2>Creer un compte</h2>
-          <label for="signup-email">Email</label>
-          <input id="signup-email" type="email" autocomplete="email" required />
-          <label for="signup-password">Mot de passe</label>
-          <input id="signup-password" type="password" autocomplete="new-password" minlength="6" required />
-          <button type="submit">S'inscrire</button>
-        </form>
-      </section>
-
-      <section id="app-section" hidden>
-        <section class="controls">
-          <form id="add-form" autocomplete="off">
-            <label for="item-input" class="sr-only">Nouvel element</label>
-            <input id="item-input" type="text" placeholder="Nouvel element..." required />
-            <button type="submit">Ajouter</button>
-          </form>
-
-          <label for="search-input" class="sr-only">Rechercher</label>
-          <input id="search-input" type="text" placeholder="Rechercher..." />
-        </section>
-
-        <section>
-          <ul id="item-list" class="item-list" aria-live="polite"></ul>
-        </section>
-      </section>
+    <main class="container container-center">
+      <p class="route-loading">Chargement...</p>
+      <p id="route-status" class="status-message" aria-live="polite"></p>
     </main>
 
     <script src="config.js"></script>
-    <script src="app.js"></script>
+    <script src="supabase.js"></script>
+    <script src="router.js"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
@@ -74,3 +29,4 @@
     </script>
   </body>
 </html>
+

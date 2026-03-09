@@ -16,18 +16,41 @@
 body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: url("assets/bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--text);
+  min-height: 100vh;
+  position: relative;
 }
 
 .container {
   max-width: 760px;
   margin: 40px auto;
   padding: 24px;
-  background: var(--card);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(2px);
+  position: relative;
+  z-index: 1;
+}
+
+.container-center {
+  min-height: 240px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.route-loading {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--muted);
 }
 
 .app-header {
@@ -70,9 +93,7 @@ header p {
 
 .auth-grid {
   margin-top: 14px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  max-width: 420px;
 }
 
 .auth-card {
@@ -237,10 +258,6 @@ button:hover {
 
   .app-header {
     flex-direction: column;
-  }
-
-  .auth-grid {
-    grid-template-columns: 1fr;
   }
 
   .item {

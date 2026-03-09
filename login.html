@@ -1,0 +1,49 @@
+﻿<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1f6feb" />
+    <title>Mini Liste - Connexion</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="assets/icon-192.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="app-header">
+        <div>
+          <h1>Mini Liste</h1>
+          <p>Connectez-vous pour acceder a votre liste synchronisee.</p>
+        </div>
+      </header>
+
+      <p id="status-message" class="status-message" aria-live="polite"></p>
+
+      <section class="auth-grid">
+        <form id="login-form" class="auth-card" autocomplete="on">
+          <h2>Connexion</h2>
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" autocomplete="email" required />
+          <label for="login-password">Mot de passe</label>
+          <input id="login-password" type="password" autocomplete="current-password" required />
+          <button type="submit">Se connecter</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="supabase.js"></script>
+    <script src="auth.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("sw.js")
+            .catch((error) => console.error("Service Worker registration failed:", error));
+        });
+      }
+    </script>
+  </body>
+</html>
+

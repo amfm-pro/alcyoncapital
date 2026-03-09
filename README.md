@@ -1,16 +1,26 @@
-# Mini application web statique + Supabase
+﻿# Mini application web statique + Supabase
 
 Cette application est une TODO liste statique (HTML/CSS/JS) transformee en PWA, synchronisee via Supabase entre plusieurs appareils (PC et Galaxy S7).
 
 ## Fichiers principaux
 
-- `index.html` : UI (auth + liste) et chargement des scripts.
+- `index.html` : routeur (redirige selon la session vers `login.html` ou `app.html`).
+- `login.html` : page de connexion (email + mot de passe).
+- `app.html` : interface de liste (ajout, recherche, checkbox, suppression, deconnexion).
 - `style.css` : style responsive.
-- `app.js` : auth Supabase (API HTTP) + CRUD items.
+- `assets/bg.jpg` : image de fond.
+- `assets/icon.png` : source unique des icones PWA/favicon.
+- `assets/icon-192.png`, `assets/icon-512.png` : icones PWA standard.
+- `assets/icon-192-maskable.png`, `assets/icon-512-maskable.png` : icones maskable Android.
+- `supabase.js` : init/config Supabase + session/auth + helpers REST communs.
+- `router.js` : logique de redirection de `index.html`.
+- `auth.js` : logique de connexion de `login.html`.
+- `list.js` : CRUD items + UI de `app.html`.
 - `manifest.webmanifest` : configuration PWA.
 - `sw.js` : service worker avec pre-cache et cache-first.
 - `config.example.js` : modele de configuration Supabase.
 - `config.js` : configuration locale reelle (non committee).
+- `scripts/build_icons.py` : generation locale des icones depuis `assets/icon.png`.
 
 ## Prerequis Supabase
 
@@ -37,6 +47,22 @@ window.APP_CONFIG = {
 };
 ```
 
+## Generation des icones
+
+```powershell
+python -m pip install Pillow
+python scripts/build_icons.py
+```
+
+Le script genere automatiquement:
+
+- `assets/icon-192.png`
+- `assets/icon-512.png`
+- `assets/icon-192-maskable.png`
+- `assets/icon-512-maskable.png`
+
+Si `assets/icon.png` est trop petit (moins de `512x512`), le script s'arrete avec une erreur explicite.
+
 ## Test local
 
 Serveur Python:
@@ -48,10 +74,16 @@ python -m http.server 8000
 
 Puis ouvrir `http://localhost:8000`.
 
-Checks rapides:
+Flux attendu:
 
-- inscription d'un compte,
-- connexion/deconnexion,
+- `index.html` redirige vers `login.html` si deconnecte.
+- connexion valide -> redirection vers `app.html`.
+- refresh sur `app.html` conserve l'acces tant que la session est valide.
+- acces direct a `app.html` sans session -> redirection vers `login.html`.
+- bouton `Se deconnecter` -> `login.html`.
+
+Checks CRUD:
+
 - ajout d'item,
 - toggle fait/a faire,
 - suppression,
@@ -61,7 +93,7 @@ Checks rapides:
 
 ```powershell
 git add .
-git commit -m "Add Supabase auth + synced items"
+git commit -m "Split login/app pages + router"
 git push
 ```
 
@@ -81,3 +113,8 @@ Ensuite attendre le redeploiement Pages, puis ouvrir:
 
 - `config.js` est ignore par Git via `.gitignore`.
 - Si tu modifies `sw.js`, incremente `CACHE_VERSION` pour forcer le refresh du cache.
+- Pour forcer la mise a jour sur mobile:
+1. Fermer totalement la PWA (et les onglets du site).
+2. Relancer une fois l'URL pour laisser le nouveau service worker (`CACHE_VERSION`) s'activer.
+3. Si l'icone ou le fond ne changent pas: Chrome Android > Parametres > Parametres des sites > Stockage > ton domaine > Effacer et reinitialiser.
+4. Si l'icone installable reste ancienne: desinstaller la PWA puis la reinstaller.

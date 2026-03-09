@@ -1,14 +1,22 @@
-const CACHE_VERSION = "v2";
+﻿const CACHE_VERSION = "v5";
 const CACHE_NAME = `mini-liste-${CACHE_VERSION}`;
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
+  "./login.html",
+  "./app.html",
   "./style.css",
-  "./app.js",
+  "./supabase.js",
+  "./router.js",
+  "./auth.js",
+  "./list.js",
   "./manifest.webmanifest",
   "./config.js",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+  "./assets/bg.jpg",
+  "./assets/icon-192.png",
+  "./assets/icon-512.png",
+  "./assets/icon-192-maskable.png",
+  "./assets/icon-512-maskable.png",
 ];
 
 self.addEventListener("install", (event) => {
